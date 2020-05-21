@@ -6,8 +6,8 @@ import (
 	"fmt"
 )
 
-// Down rolls back a single migration from the current version.
-func Down(ctx context.Context, db *sql.DB, dir string) error {
+// DownCtx rolls back a single migration from the current version.
+func DownCtx(ctx context.Context, db *sql.DB, dir string) error {
 	currentVersion, err := GetDBVersion(db)
 	if err != nil {
 		return err
@@ -23,11 +23,16 @@ func Down(ctx context.Context, db *sql.DB, dir string) error {
 		return fmt.Errorf("no migration %v", currentVersion)
 	}
 
-	return current.Down(ctx, db)
+	return current.DownCtx(ctx, db)
 }
 
-// DownTo rolls back migrations to a specific version.
-func DownTo(ctx context.Context, db *sql.DB, dir string, version int64) error {
+// Down rolls back a single migration from the current version.
+func Down(db *sql.DB, dir string) error {
+	return DownCtx(context.Background(), db, dir)
+}
+
+// DownToCtx rolls back migrations to a specific version.
+func DownToCtx(ctx context.Context, db *sql.DB, dir string, version int64) error {
 	migrations, err := CollectMigrations(dir, minVersion, maxVersion)
 	if err != nil {
 		return err
@@ -50,8 +55,13 @@ func DownTo(ctx context.Context, db *sql.DB, dir string, version int64) error {
 			return nil
 		}
 
-		if err = current.Down(ctx, db); err != nil {
+		if err = current.DownCtx(ctx, db); err != nil {
 			return err
 		}
 	}
+}
+
+// DownTo rolls back migrations to a specific version.
+func DownTo(db *sql.DB, dir string, version int64) error {
+	return DownToCtx(context.Background(), db, dir, version)
 }

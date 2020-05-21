@@ -35,20 +35,30 @@ func (m *Migration) String() string {
 	return fmt.Sprintf(m.Source)
 }
 
-// Up runs an up migration.
-func (m *Migration) Up(ctx context.Context, db *sql.DB) error {
+// UpCtx runs an up migration.
+func (m *Migration) UpCtx(ctx context.Context, db *sql.DB) error {
 	if err := m.run(ctx, db, true); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Down runs a down migration.
-func (m *Migration) Down(ctx context.Context, db *sql.DB) error {
+// Up runs an up migration.
+func (m *Migration) Up(db *sql.DB) error {
+	return m.UpCtx(context.Background(), db)
+}
+
+// DownCtx runs a down migration.
+func (m *Migration) DownCtx(ctx context.Context, db *sql.DB) error {
 	if err := m.run(ctx, db, false); err != nil {
 		return err
 	}
 	return nil
+}
+
+// Down runs a down migration.
+func (m *Migration) Down(db *sql.DB) error {
+	return m.DownCtx(context.Background(), db)
 }
 
 func (m *Migration) run(ctx context.Context, db *sql.DB, direction bool) error {

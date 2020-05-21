@@ -5,8 +5,8 @@ import (
 	"database/sql"
 )
 
-// UpTo migrates up to a specific version.
-func UpTo(ctx context.Context, db *sql.DB, dir string, version int64) error {
+// UpToCtx migrates up to a specific version.
+func UpToCtx(ctx context.Context, db *sql.DB, dir string, version int64) error {
 	migrations, err := CollectMigrations(dir, minVersion, version)
 	if err != nil {
 		return err
@@ -27,19 +27,29 @@ func UpTo(ctx context.Context, db *sql.DB, dir string, version int64) error {
 			return err
 		}
 
-		if err = next.Up(ctx, db); err != nil {
+		if err = next.UpCtx(ctx, db); err != nil {
 			return err
 		}
 	}
 }
 
-// Up applies all available migrations.
-func Up(ctx context.Context, db *sql.DB, dir string) error {
+// UpTo migrates up to a specific version.
+func UpTo(ctx context.Context, db *sql.DB, dir string, version int64) error {
+	return UpToCtx(context.Background(), db, dir, version)
+}
+
+// UpCtx applies all available migrations.
+func UpCtx(ctx context.Context, db *sql.DB, dir string) error {
 	return UpTo(ctx, db, dir, maxVersion)
 }
 
-// UpByOne migrates up by a single version.
-func UpByOne(ctx context.Context, db *sql.DB, dir string) error {
+// Up applies all available migrations.
+func Up(db *sql.DB, dir string) error {
+	return UpCtx(context.Background(), db, dir)
+}
+
+// UpByOneCtx migrates up by a single version.
+func UpByOneCtx(ctx context.Context, db *sql.DB, dir string) error {
 	migrations, err := CollectMigrations(dir, minVersion, maxVersion)
 	if err != nil {
 		return err
@@ -58,9 +68,14 @@ func UpByOne(ctx context.Context, db *sql.DB, dir string) error {
 		return err
 	}
 
-	if err = next.Up(ctx, db); err != nil {
+	if err = next.UpCtx(ctx, db); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// UpByOne migrates up by a single version.
+func UpByOne(ctx context.Context, db *sql.DB, dir string) error {
+	return UpByOneCtx(context.Background(), db, dir)
 }
